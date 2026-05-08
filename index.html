@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- CSP: solo recursos locales -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data:; connect-src 'none';">
+  <title>SiteSupport</title>
+  <!-- Detector de vendor files faltantes -->
+  <script>window._vFail=0;</script>
+  <!-- Librerías locales (requieren: npm install) -->
+  <link rel="stylesheet" href="src/vendor/fonts.css">
+  <link rel="stylesheet" href="src/vendor/handsontable.full.min.css" onerror="window._vFail++">
+  <script src="src/vendor/xlsx.full.min.js"          onerror="window._vFail++"></script>
+  <script src="src/vendor/chart.umd.min.js"           onerror="window._vFail++"></script>
+  <script src="src/vendor/d3.min.js"                  onerror="window._vFail++"></script>
+  <script src="src/vendor/handsontable.full.min.js"   onerror="window._vFail++"></script>
+  <!-- Estilos de la app -->
+  <link rel="stylesheet" href="src/styles.css">
+  <!-- Si falta algún vendor, mostrar pantalla de setup en vez de errores -->
+  <script>
+  if(window._vFail>0){
+    document.addEventListener('DOMContentLoaded',function(){
+      document.body.style.cssText='margin:0;background:#100C09;min-height:100vh;display:flex;align-items:center;justify-content:center;font-family:system-ui,sans-serif;';
+      document.body.innerHTML='<div style="max-width:540px;text-align:center;padding:2.5rem 2rem">'
+        +'<div style="font-size:3rem;margin-bottom:1.25rem">⚙️</div>'
+        +'<h1 style="font-size:1.3rem;font-weight:700;color:#D97757;margin:0 0 .5rem;letter-spacing:.04em">SITE SUPPORT</h1>'
+        +'<p style="color:#8B6A4A;font-size:.78rem;letter-spacing:.1em;text-transform:uppercase;margin:0 0 2rem">Setup requerido</p>'
+        +'<div style="background:#1C1208;border:1px solid #2E1E0A;border-radius:10px;padding:1.5rem;text-align:left;margin-bottom:1.5rem">'
+        +'<p style="color:#FAF0DC;font-size:.85rem;margin:0 0 1rem">Las librerías no están instaladas.<br>Ejecuta este comando en la carpeta del proyecto:</p>'
+        +'<code style="display:block;background:#0D0804;border:1px solid #3A2510;border-radius:6px;padding:.75rem 1rem;color:#E8A855;font-size:.9rem;font-family:monospace;letter-spacing:.02em">npm install</code>'
+        +'<p style="color:#7A5A3A;font-size:.73rem;margin:.85rem 0 0">Esto instala las dependencias y copia las librerías a <code style="color:#B8906A">src/vendor/</code>.<br>Luego reinicia la aplicación.</p>'
+        +'</div>'
+        +'<div style="display:flex;flex-direction:column;gap:.5rem;text-align:left;background:#1C1208;border:1px solid #2E1E0A;border-radius:10px;padding:1.25rem">'
+        +'<div style="font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;color:#7A5A3A;margin-bottom:.25rem">Pasos</div>'
+        +'<div style="font-size:.78rem;color:#FAF0DC;display:flex;gap:.6rem;align-items:flex-start"><span style="color:#D97757;flex-shrink:0">1.</span>Abre una terminal en la carpeta <code style="background:#0D0804;padding:.1rem .4rem;border-radius:3px;color:#E8A855">site-support-electron/</code></div>'
+        +'<div style="font-size:.78rem;color:#FAF0DC;display:flex;gap:.6rem;align-items:flex-start"><span style="color:#D97757;flex-shrink:0">2.</span>Ejecuta: <code style="background:#0D0804;padding:.1rem .4rem;border-radius:3px;color:#E8A855">npm install</code></div>'
+        +'<div style="font-size:.78rem;color:#FAF0DC;display:flex;gap:.6rem;align-items:flex-start"><span style="color:#D97757;flex-shrink:0">3.</span>Luego: <code style="background:#0D0804;padding:.1rem .4rem;border-radius:3px;color:#E8A855">npm run dev</code></div>'
+        +'</div>'
+        +'<p style="color:#5A3A1A;font-size:.68rem;margin:1.25rem 0 0">vendor files faltantes: '+window._vFail+'</p>'
+        +'</div>';
+    });
+  }
+  </script>
+</head>
+<body>
+<div id="cursor"></div>
+<div id="w-cursor">
+  <div class="wc-ring"></div>
+  <div class="wc-dot"></div>
+  <div class="wc-line wc-lh"></div>
+  <div class="wc-line wc-lr"></div>
+  <div class="wc-line wc-lt"></div>
+  <div class="wc-line wc-lb"></div>
+</div>
+<div class="sb-tooltip" id="sbTooltip"></div>
+
+<!-- WELCOME — Claude's Mind -->
+<div id="welcome">
+  <canvas id="ion-canvas"></canvas>
+
+  <!-- Claude badge -->
+  <div id="w-claude-badge">
+    <span class="wbadge-label">Powered by</span>
+    <span class="wbadge-sep"></span>
+    <span class="wbadge-dot"></span>
+    <span class="wbadge-name">Bnani.Labs</span>
+  </div>
+
+  <!-- Welcome top-right: theme + fullscreen -->
+  <div id="w-top-controls">
+    <button onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
+      <svg id="w-tp-moon" class="w-ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+      <svg id="w-tp-sun" class="w-ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+    </button>
+    <button onclick="toggleFullscreen()" title="Pantalla completa" aria-label="Pantalla completa">
+      <svg id="w-fs-expand" class="w-ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+      </svg>
+      <svg id="w-fs-compress" class="w-ti" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 0 2 2v3M16 21v-3a2 2 0 0 0 2-2h3"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Centered flex column: title + restore chip -->
+  <div id="welcome-inner">
+    <!-- Main clickable: text logo -->
+    <button id="w-title" onclick="startApp()" tabindex="0">
+      <span id="w-icon-wrap">
+        <span id="w-title-text">Site<span id="w-title-accent">Support</span></span>
+        <canvas id="w-wave-canvas"></canvas>
+      </span>
+      <span id="w-hint">— clic para iniciar —</span>
+    </button>
+
+    <!-- Restore chip — centered under title -->
+    <div id="wRestore" onclick="startApp()">
+      <span class="mi material-icons-round">history</span>
+      <span>Restaurar:</span>
+      <span id="wRName"></span>
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<!-- APP -->
+<div id="app">
+  <header class="hdr">
+    <div class="hdr-top">
+      <div class="brand" onclick="showWelcome()" title="Inicio">
+          <img src="src/icon.svg" alt="SiteSupport" class="brand-icon">
+          <span class="brand-text">SITE<span class="lbl">&nbsp;SUPPORT</span></span>
+        </div>
+      <div class="hdr-right">
+        <div class="schip"><div class="sdot" id="sysDot"></div><span id="sysSt">Sin datos</span></div>
+        <div class="schip" id="recChip" style="display:none"><span class="mi material-icons-round" style="font-size:.8rem;color:var(--cyan)">dataset</span><span id="recCnt" style="font-family:var(--fm);color:var(--cyan)">0</span> registros</div>
+        <!-- Theme btn — direct toggle, same as welcome, icon auto-switches -->
+        <button class="theme-picker-btn" onclick="toggleTheme()" title="Cambiar tema" aria-label="Cambiar tema">
+          <svg id="a-tp-moon" class="tp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+          <svg id="a-tp-sun" class="tp-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <circle cx="12" cy="12" r="4"/>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+          </svg>
+        </button>
+        <!-- Fullscreen btn -->
+        <button class="fs-btn" onclick="toggleFullscreen()" title="Pantalla completa" aria-label="Pantalla completa">
+          <svg id="a-fs-expand" class="fs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3M21 8V5a2 2 0 0 0-2-2h-3M3 16v3a2 2 0 0 0 2 2h3M16 21h3a2 2 0 0 0 2-2v-3"/>
+          </svg>
+          <svg id="a-fs-compress" class="fs-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+            <path d="M8 3v3a2 2 0 0 1-2 2H3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 0 2 2v3M16 21v-3a2 2 0 0 0 2-2h3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <div class="tabs">
+      <button class="tbtn dis" onclick="sw('datos')" id="tab-datos"><span class="mi material-icons-round">table_rows</span><span class="lbl">Datos</span></button>
+      <button class="tbtn tbtn-daily dis" onclick="sw('daily')" id="tab-daily"><span class="mi material-icons-round">today</span><span class="lbl">Daily</span><span class="tbadge" id="dailyBdg" style="display:none">0</span></button>
+      <button class="tbtn dis" onclick="sw('editor')" id="tab-editor"><span class="mi material-icons-round">table_view</span><span class="lbl">Editor</span></button>
+      <button class="tbtn dis" onclick="sw('analisis')" id="tab-analisis"><span class="mi material-icons-round">insights</span><span class="lbl">Análisis</span></button>
+      <button class="tbtn dis" onclick="sw('graficas')" id="tab-graficas"><span class="mi material-icons-round">bar_chart</span><span class="lbl">Gráficas</span></button>
+      <button class="tbtn dis" onclick="sw('comparacion')" id="tab-comparacion"><span class="mi material-icons-round">compare</span><span class="lbl">Comparación</span></button>
+      <button class="tbtn act" onclick="sw('upload')" id="tab-upload" style="margin-left:auto"><span class="mi material-icons-round">upload_file</span><span class="lbl">Cargar</span></button>
+    </div>
+  </header>
+  <main class="content">
+    <!-- UPLOAD -->
+    <div class="pane act" id="pane-upload">
+      <div style="max-width:700px;margin:0 auto">
+        <div class="shdr"><div class="stitle"><span class="mi material-icons-round">upload_file</span>Importar Datos</div></div>
+        <div class="upz" id="upz" onclick="document.getElementById('fi').click()" ondragover="dov(event)" ondragleave="dlv()" ondrop="dop(event)">
+          <input type="file" id="fi" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this.files[0])">
+          <span class="mi material-icons-round up-icon">cloud_upload</span>
+          <h3>DRAG & DROP tu archivo Excel</h3>
+          <p>o haz click para seleccionar</p>
+          <p style="margin-top:.5rem;font-size:.72rem">Formatos: <span class="ext">.xlsx &nbsp; .xls</span></p>
+        </div>
+        <div id="upSum" style="display:none">
+          <div class="sgrid">
+            <div class="scard cyan"><div class="slbl"><span class="mi material-icons-round">table_rows</span>Total</div><div class="sval" id="su0">0</div><div class="ssub">registros</div></div>
+            <div class="scard"><div class="slbl"><span class="mi material-icons-round">view_column</span>Columnas</div><div class="sval" id="su1">0</div><div class="ssub">detectadas</div></div>
+            <div class="scard green"><div class="slbl"><span class="mi material-icons-round">lock_open</span>Abiertos</div><div class="sval" id="su2">0</div><div class="ssub">activos</div></div>
+            <div class="scard"><div class="slbl"><span class="mi material-icons-round">lock</span>Cerrados</div><div class="sval" id="su3">0</div><div class="ssub">resueltos</div></div>
+          </div>
+          <div style="margin-top:1rem;padding:.75rem 1rem;background:rgba(107,174,138,.08);border:1px solid rgba(107,174,138,.22);border-radius:var(--r);display:flex;align-items:center;gap:.5rem">
+            <span class="mi material-icons-round" style="color:var(--green)">check_circle</span>
+            <span style="font-size:.78rem">Archivo cargado. Todas las vistas disponibles.</span>
+            <span id="suFname" style="margin-left:auto;font-family:var(--fm);font-size:.68rem;color:var(--text3)"></span>
+          </div>
+        </div>
+
+        <!-- ── Reset section ── -->
+        <div class="rst-card" id="rstCard">
+          <div class="rst-icon"><span class="mi material-icons-round">refresh</span></div>
+          <div class="rst-body">
+            <div class="rst-title">Restablecer aplicación</div>
+            <div class="rst-desc">Limpia todos los datos cargados y vuelve al estado inicial.<br>
+              <strong>Las notas se conservan siempre.</strong>
+            </div>
+            <div class="rst-preview" id="rstPreview" style="display:none">
+              <span class="mi material-icons-round" style="font-size:.8rem;color:var(--gold)">sticky_note_2</span>
+              <span id="rstNoteCount">0</span> nota(s) serán conservadas
+            </div>
+          </div>
+          <button class="btn btn-rst" onclick="confirmReset()" id="rstBtn">
+            <span class="mi material-icons-round">restart_alt</span>Restablecer
+          </button>
+        </div>
+
+        <!-- Confirm dialog (inline) -->
+        <div class="rst-confirm" id="rstConfirm" style="display:none">
+          <span class="mi material-icons-round" style="color:var(--gold);font-size:1.5rem">warning</span>
+          <div>
+            <div style="font-family:var(--fd);font-size:.72rem;font-weight:600;color:var(--text1);margin-bottom:.35rem">¿Confirmar restablecimiento?</div>
+            <div style="font-size:.72rem;color:var(--text2)">Se eliminarán los datos cargados. Las notas <strong style="color:var(--green)">no se borran</strong>.</div>
+          </div>
+          <div style="display:flex;gap:.5rem;margin-left:auto">
+            <button class="btn btn-gh btn-sm" onclick="cancelReset()">Cancelar</button>
+            <button class="btn btn-danger btn-sm" onclick="doReset()"><span class="mi material-icons-round">delete_sweep</span>Confirmar</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- DATOS -->
+    <div class="pane" id="pane-datos">
+      <div class="shdr">
+        <div class="stitle"><span class="mi material-icons-round">table_rows</span>Registros<span class="tbl-stat" id="datCnt"></span></div>
+        <div class="sacts">
+          <div class="sbar"><span class="mi material-icons-round">search</span><input type="text" id="datSrch" placeholder="Buscar..." oninput="dbounceSrch()"></div>
+          <button class="btn btn-g" onclick="expDatos()"><span class="mi material-icons-round">download</span>Exportar</button>
+        </div>
+      </div>
+
+      <div class="frow" id="datFilters"></div>
+      <div class="ach-bar" id="achBar" style="display:none"></div>
+      <div class="twrap"><table class="dt" id="datT"><thead id="datH"></thead><tbody id="datB"></tbody></table></div>
+      <div class="pgn" id="datPgn"></div>
+    </div>
+    <!-- ANALISIS -->
+    <div class="pane" id="pane-analisis">
+      <div class="shdr"><div class="stitle"><span class="mi material-icons-round">insights</span>Dashboard Analítico</div></div>
+      <div class="krow" id="krow"></div>
+      <div class="agrid" id="agrid"></div>
+    </div>
+    <!-- GRAFICAS -->
+    <div class="pane" id="pane-graficas">
+      <div class="shdr"><div class="stitle"><span class="mi material-icons-round">bar_chart</span>Visualizaciones</div></div>
+      <div class="cgrid" id="cgrid"></div>
+    </div>
+    <!-- COMPARACION -->
+    <div class="pane" id="pane-comparacion">
+      <div class="shdr">
+        <div class="stitle"><span class="mi material-icons-round">compare</span>Análisis Comparativo</div>
+        <div class="sacts"><button class="btn btn-g" onclick="expComp()" id="btnExpComp" style="display:none"><span class="mi material-icons-round">download</span>Exportar</button></div>
+      </div>
+      <div class="cup-zone" id="cup" onclick="document.getElementById('fi2').click()">
+        <input type="file" id="fi2" accept=".xlsx,.xls" style="display:none" onchange="handleFile2(this.files[0])">
+        <span class="mi material-icons-round" style="font-size:2rem;display:block;margin-bottom:.5rem;color:var(--cyan)">upload_file</span>
+        <strong style="font-family:var(--fd);font-size:.72rem;letter-spacing:.05em">Cargar segundo archivo</strong>
+        <p style="font-size:.75rem;margin-top:.3rem">Comparará contra el archivo principal</p>
+      </div>
+      <div id="compRes" style="display:none;margin-top:1.5rem"></div>
+    </div>
+    <!-- DAILY -->
+    <div class="pane" id="pane-daily">
+      <div class="shdr">
+        <div class="stitle"><span class="mi material-icons-round">today</span>Resumen Daily<span class="tbl-stat" id="dailyStat"></span></div>
+        <div class="sacts"><button class="btn btn-g" onclick="expDaily()"><span class="mi material-icons-round">download</span>Exportar</button></div>
+      </div>
+      <div class="dbadges" id="dbdgs"></div>
+      <div class="finfo" id="dfinfo"><span class="mi material-icons-round">filter_alt</span><span id="dftxt"></span><button onclick="clearDF()">✕ Quitar</button></div>
+      <div class="mcharts" id="mcharts"></div>
+      <div class="twrap" style="max-height:calc(100vh - 460px)"><table class="dt" id="dailyT"><thead id="dailyH"></thead><tbody id="dailyB"></tbody></table></div>
+    </div>
+    <!-- EDITOR -->
+    <div class="pane" id="pane-editor">
+      <div class="etoolbar">
+        <div class="stitle" style="margin-bottom:0"><span class="mi material-icons-round">table_view</span>Editor de Datos<span class="tbl-stat" id="editorStat"></span></div>
+        <div style="display:flex;align-items:center;gap:.4rem;font-size:.65rem;color:var(--text3);font-family:var(--fm);">
+          <span class="mi material-icons-round" style="font-size:.85rem;color:var(--cyan)">info</span>
+          Doble clic · Selección múltiple · Ctrl+C/V · Ctrl+Z · Clic derecho para más opciones
+        </div>
+        <div style="margin-left:auto;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap">
+          <span class="ubadge" id="ubdg"><span class="mi material-icons-round" style="font-size:.75rem">warning</span>Sin guardar</span>
+          <button class="btn btn-p" onclick="applyEdit()"><span class="mi material-icons-round">check</span>Aplicar cambios</button>
+          <button class="btn btn-g" onclick="expEditor()"><span class="mi material-icons-round">download</span>Exportar</button>
+        </div>
+      </div>
+      <div id="hot-container"></div>
+    </div>
+  </main>
+</div>
+
+<button id="nfab" onclick="toggleNotes()"><span class="mi material-icons-round">sticky_note_2</span><span class="nbdg" id="nbdg">0</span></button>
+<div id="notesP">
+  <div class="nhdr" id="notesHdr"><span class="mi material-icons-round">sticky_note_2</span>Notas<button class="xb" onclick="toggleNotes()">✕</button></div>
+  <div class="nlist" id="nlist"></div>
+  <div class="nfooter">
+    <input type="text" id="nti" placeholder="Título...">
+    <textarea rows="2" id="nbi" placeholder="Contenido..."></textarea>
+    <button class="btn btn-p" onclick="addNote()" style="align-self:flex-end"><span class="mi material-icons-round">add</span>Agregar</button>
+  </div>
+</div>
+
+<div id="drillP">
+  <div class="dphdr" id="drillHdr">
+    <span class="mi material-icons-round" style="color:var(--cyan);font-size:1rem">manage_search</span>
+    <h4 id="drillTtl">Detalle</h4>
+    <button class="xb" onclick="closeDrill()">✕</button>
+  </div>
+  <div class="dpmeta" id="drillMeta"></div>
+  <div class="dpbody"><table class="dptable"><thead id="drillH"></thead><tbody id="drillB"></tbody></table></div>
+  <div class="dpfoot">
+    <button class="btn btn-gh btn-sm" onclick="closeDrill()">Cerrar</button>
+    <button class="btn btn-g btn-sm" onclick="expDrill()"><span class="mi material-icons-round">download</span>Exportar</button>
+  </div>
+</div>
+
+<div class="mover" id="modal" onclick="cmoo(event)">
+  <div class="modal">
+    <div class="mhdr"><h3 id="mttl">Detalle</h3><button onclick="cmo()">✕</button></div>
+    <div class="mbody" id="mbody"></div>
+    <div class="mfoot" id="mfoot"></div>
+  </div>
+</div>
+<script>if(!window._vFail)document.write('<scr'+'ipt src="src/app.js"><\/scr'+'ipt>');</script>
+</body>
+</html>

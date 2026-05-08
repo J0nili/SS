@@ -1,0 +1,83 @@
+{
+  "name": "sitesupport",
+  "version": "2.0.0",
+  "description": "SiteSupport ·  Warm Edition",
+  "main": "main.js",
+  "author": "Bnani.Labs",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --dev",
+    "setup": "node scripts/setup-vendor.js",
+    "build:win": "npm run setup && electron-builder --win --x64",
+    "build:mac": "npm run setup && electron-builder --mac",
+    "build:lin": "npm run setup && electron-builder --linux AppImage deb",
+    "postinstall": "node scripts/setup-vendor.js"
+  },
+  "dependencies": {
+    "@fontsource/exo-2": "^4.5.0",
+    "@fontsource/jetbrains-mono": "^4.5.0",
+    "@fontsource/orbitron": "^4.5.0",
+    "chart.js": "4.4.1",
+    "d3": "7.8.5",
+    "handsontable": "^16.2.0",
+    "material-icons": "^1.13.2",
+    "xlsx": "0.18.5"
+  },
+  "devDependencies": {
+    "electron": "^40.7.0",
+    "electron-builder": "^26.8.1"
+  },
+  "build": {
+    "appId": "com.sitesupport.app",
+    "productName": "SiteSupport",
+    "copyright": "© 2026 Bnani.Labs",
+    "icon": "Build/icon.ico",
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "src/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "Build/icon.ico"
+    },
+    "mac": {
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "x64",
+            "arm64"
+          ]
+        }
+      ],
+      "icon": "Build/icon.ico",
+      "category": "public.app-category.business"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "Build/icon.ico",
+      "category": "Office"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "installerIcon": "Build/icon.ico",
+      "installerHeaderIcon": "Build/icon.ico",
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}
